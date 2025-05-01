@@ -1,5 +1,5 @@
 import discord
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, timezone
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -18,14 +18,29 @@ class MyClient(discord.Client):
         
         print(f'Message from {message.author}: {message.content}')
         
-        # bot sends a message back to the channel
-        await message.channel.send('Hello!')
-        
         if message.content.startswith('-ls scrape'):
+            # Define Japan Standard Time (JST) timezone
+            jst = timezone(timedelta(hours=9))
+
+            # Get current time in JST
+            jst_now = datetime.now(jst)
+
+            # Extract just the date
+            jst_extract_date = jst_now.date()
+            
+            jst_start_of_day = datetime.combine(jst_extract_date, datetime.min.time(), jst)
+
+            # Subtract one day to get the datetime for the previous day
+            jst_target_date = jst_start_of_day - timedelta(days=1)
+            
+            # Format the date for the playlist title
+            title_date = jst_target_date.strftime("%Y-%m-%d")
+         
+            
             # Collect all messages in the channel from the past day
             links = []
             
-            async for msg in message.channel.history(limit=1000, after=datetime.today() - timedelta(days=1)):
+            async for msg in message.channel.history(limit=1000, after=jst_target_date):
                 if msg.author != self.user and 'http' in msg.content:
                     # Check if the link is a YouTube link
                     for word in msg.content.split():
@@ -48,16 +63,15 @@ class MyClient(discord.Client):
                 # Create a YouTube API client
                 youtube = get_authenticated_service()
                 
-                # Get today's date in the format YYYY-MM-DD
-                target_date = (datetime.today()-timedelta(days=1)).strftime("%Y-%m-%d")
+                
                 
                 # Create a new playlist with dynamic title
                 playlist_request = youtube.playlists().insert(
                     part="snippet,status",
                     body={
                         "snippet": {
-                            "title": f"HIVE {message.channel.name} {target_date}",  # Dynamic title
-                            "description": f"A playlist created from links shared in {message.channel.name} on {target_date}.",
+                            "title": f"HIVE {message.channel.name} {title_date}",  # Dynamic title
+                            "description": f"A playlist created from links shared in {message.channel.name} on {title_date}.",
                             "tags": ["Discord", "YouTube", "Playlist"],
                             "defaultLanguage": "en"
                         },
@@ -89,8 +103,8 @@ class MyClient(discord.Client):
                 # Send the playlist link back to the channel
                 playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
                 await message.channel.send(
-                    f"**Playlist Title**: HIVE {message.channel.name} {target_date}\n"
-                    f"**Description**: A playlist created from links shared in {message.channel.name} on {target_date}.\n"
+                    f"**Playlist Title**: HIVE {message.channel.name} {title_date}\n"
+                    f"**Description**: A playlist created from links shared in {message.channel.name} on {title_date}.\n"
                     f"**Playlist Link**: {playlist_url}"
                 )
             else:
@@ -101,4 +115,4 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = MyClient(intents=intents)
-client.run('DISCORD_BOT_TOKEN')  # Replace with your bot's token
+client.run('')  # Replace with your bot's token
