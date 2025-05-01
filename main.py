@@ -18,7 +18,7 @@ class MyClient(discord.Client):
         
         print(f'Message from {message.author}: {message.content}')
         
-        if message.content.startswith('-ls scrape'):
+        if message.content == '-ls scrape':
             # Define Japan Standard Time (JST) timezone
             jst = timezone(timedelta(hours=9))
 
@@ -70,8 +70,8 @@ class MyClient(discord.Client):
                     part="snippet,status",
                     body={
                         "snippet": {
-                            "title": f"HIVE {message.channel.name} {title_date}",  # Dynamic title
-                            "description": f"A playlist created from links shared in {message.channel.name} on {title_date}.",
+                            "title": f"{message.guild.name} {message.channel.name} {title_date}",  # Dynamic title with server name
+                            "description": f"A playlist created from links shared in {message.guild.name}'s {message.channel.name} on {title_date}.",
                             "tags": ["Discord", "YouTube", "Playlist"],
                             "defaultLanguage": "en"
                         },
@@ -103,8 +103,8 @@ class MyClient(discord.Client):
                 # Send the playlist link back to the channel
                 playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
                 await message.channel.send(
-                    f"**Playlist Title**: HIVE {message.channel.name} {title_date}\n"
-                    f"**Description**: A playlist created from links shared in {message.channel.name} on {title_date}.\n"
+                    f"**Playlist Title**: {message.guild.name} {message.channel.name} {title_date}\n"
+                    f"**Description**: A playlist created from links shared in {message.guild.name}'s {message.channel.name} on {title_date}.\n"
                     f"**Playlist Link**: {playlist_url}"
                 )
             else:
