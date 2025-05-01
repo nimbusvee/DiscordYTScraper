@@ -1,5 +1,5 @@
 import discord
-from datetime import timedelta
+from datetime import timedelta, datetime
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
@@ -25,7 +25,7 @@ class MyClient(discord.Client):
             # Collect all messages in the channel from the past day
             links = []
             
-            async for msg in message.channel.history(limit=1000, after=discord.utils.utcnow() - timedelta(days=3)):
+            async for msg in message.channel.history(limit=1000, after=datetime.today() - timedelta(days=1)):
                 if msg.author != self.user and 'http' in msg.content:
                     # Check if the link is a YouTube link
                     for word in msg.content.split():
@@ -48,13 +48,16 @@ class MyClient(discord.Client):
                 # Create a YouTube API client
                 youtube = get_authenticated_service()
                 
-                # Create a new playlist
+                # Get today's date in the format YYYY-MM-DD
+                target_date = (datetime.today()-timedelta(days=1)).strftime("%Y-%m-%d")
+                
+                # Create a new playlist with dynamic title
                 playlist_request = youtube.playlists().insert(
                     part="snippet,status",
                     body={
                         "snippet": {
-                            "title": "Discord Collected Links Playlis Today",
-                            "description": "A playlist created from links shared in Discord.",
+                            "title": f"HIVE {message.channel.name} {target_date}",  # Dynamic title
+                            "description": f"A playlist created from links shared in {message.channel.name} on {target_date}.",
                             "tags": ["Discord", "YouTube", "Playlist"],
                             "defaultLanguage": "en"
                         },
@@ -64,6 +67,7 @@ class MyClient(discord.Client):
                     }
                 )
                 playlist_response = playlist_request.execute()
+                # print(playlist_response) # Debugging line to check the response
                 playlist_id = playlist_response["id"]
                 
                 # Add each link to the playlist
@@ -84,7 +88,11 @@ class MyClient(discord.Client):
                 
                 # Send the playlist link back to the channel
                 playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
-                await message.channel.send(f"Here is the YouTube playlist created from the links:\n{playlist_url}")
+                await message.channel.send(
+                    f"**Playlist Title**: HIVE {message.channel.name} {target_date}\n"
+                    f"**Description**: A playlist created from links shared in {message.channel.name} on {target_date}.\n"
+                    f"**Playlist Link**: {playlist_url}"
+                )
             else:
                 await message.channel.send("No links found in the past day.")
 
@@ -93,4 +101,4 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = MyClient(intents=intents)
-client.run('DISCORD_BOT_TOKEN')
+client.run('DISCORD_BOT_TOKEN')  # Replace with your bot's token
