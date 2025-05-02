@@ -134,4 +134,4 @@ intents = discord.Intents.default()
 intents.message_content = True
 
 client = MyClient(intents=intents)
-client.run('')  # Replace with your bot's token
+client.run('DISCORD_BOT_TOKEN')  # Replace with your bot's token
