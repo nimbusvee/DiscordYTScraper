@@ -5,6 +5,9 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import re
 import time
+import os
+from google.auth.transport.requests import Request
+
 
 class MyClient(discord.Client):
     async def on_ready(self):
@@ -20,6 +23,10 @@ class MyClient(discord.Client):
                 return
             
             print(f'Message from {message.author}: {message.content}')
+            
+            if message.content.startswith('-ls test'):
+                await message.channel.send("Test command received!")
+                return
             
             if message.content.startswith('-ls scrape'):
             # Extract the channel name from the command
@@ -62,9 +69,7 @@ class MyClient(discord.Client):
                 
                 thread = target_channel if isinstance(target_channel, discord.Thread) else None
                 target_channel = thread.parent if thread else target_channel
-                
-                await message.channel.send("Scraping links...")
-
+        
                 async for msg in target_channel.history(limit=1000, after=jst_target_date, before=jst_start_of_day):
                     if msg.author != self.user and 'http' in msg.content:
                         # Check if the link is a YouTube link
@@ -81,10 +86,27 @@ class MyClient(discord.Client):
 
                     # Authenticate and build the YouTube API client
                     def get_authenticated_service():
-                        flow = InstalledAppFlow.from_client_secrets_file(
-                            'client_secret.json', SCOPES)  # Replace with the path to your downloaded JSON file
-                        credentials = flow.run_local_server(port=0)
-                        return build('youtube', 'v3', credentials=credentials)
+                        creds = None
+                        
+                        # Check if token.json exists
+                        if os.path.exists('token.json'):
+                            # Load saved credentials
+                            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+                        
+                        # If no valid credentials are available, prompt the user to log in
+                        if not creds or not creds.valid:
+                            if creds and creds.expired and creds.refresh_token:
+                                creds.refresh(Request())  # Refresh the access token
+                            else:
+                                flow = InstalledAppFlow.from_client_secrets_file(
+                                    'client_secret.json', SCOPES)  # Replace with your client secrets file
+                                creds = flow.run_local_server(port=0)
+                            
+                            # Save the credentials for the next run
+                            with open('token.json', 'w') as token_file:
+                                token_file.write(creds.to_json())
+                                
+                        return build('youtube', 'v3', credentials=creds)
                     
                     # Create a YouTube API client
                     youtube = get_authenticated_service()
@@ -115,6 +137,9 @@ class MyClient(discord.Client):
                     playlist_id = playlist_response["id"]
                     
                     # Add each link to the playlist
+                    
+                    invalid_links = []
+                    
                     for link in links:
                         video_id = extract_video_id(link)  # Use the new function to extract the video ID
                         if video_id:  # Only proceed if a valid video ID is found
@@ -131,15 +156,20 @@ class MyClient(discord.Client):
                                         }
                                     }
                                 ).execute()
-                                time.sleep(1)  # Add a 1-second delay between requests
                             except Exception as e:
                                 print(f"Failed to add video {video_id}: {e}")
                         else:
+                            # Handle invalid links (e.g., log them, notify the user, etc.)
+                            invalid_links.append(link)
+                          
                             print(f"Invalid YouTube link: {link}")
                     
                     # Send the playlist link back to the channel
                     playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
+                    
                     print(f"Playlist created: {playlist_url}")  # Debugging line to check the playlist URL
+                    print(f"Invalid links: {invalid_links}")  # Debugging line to check invalid links
+                    
                     await message.channel.send(
                         f"**Playlist Title**: {target_channel.guild.name} {target_channel.name} {title_date}\n"
                         f"**Description**: A playlist created from links shared in {target_channel.guild.name}'s {target_channel.name} on {title_date}.\n"
@@ -156,3 +186,4 @@ intents.message_content = True
 
 client = MyClient(intents=intents)
 client.run('DISCORD_BOT_TOKEN')  # Replace with your bot's token
+
