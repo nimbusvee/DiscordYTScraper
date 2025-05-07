@@ -54,8 +54,6 @@ async def scrape(interaction: discord.Interaction, channel_name: str):
             await interaction.followup.send(f"Channel `{channel_name}` not found.")
             return
 
-        # await interaction.followup.send(f"Scraping links from `{channel_name}`...")
-
         # Define Japan Standard Time (JST) timezone
         jst = timezone(timedelta(hours=9))
 
