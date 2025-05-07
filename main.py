@@ -31,7 +31,10 @@ class MyClient(commands.Bot):
         if message.author == self.user:
             return
 
-        print(f'Message from {message.author}: {message.content}')
+        if message.content.startswith("-ls"):
+            print(f'Message from {message.author} in server {message.guild.name}: {message.content}')
+            
+            await message.channel.send("please use /scrape command")
         
 
 # Create the bot instance
@@ -50,8 +53,6 @@ async def scrape(interaction: discord.Interaction, channel_name: str):
         if not target_channel:
             await interaction.followup.send(f"Channel `{channel_name}` not found.")
             return
-
-        await interaction.followup.send(f"Scraping links from `{channel_name}`...")
 
         # Define Japan Standard Time (JST) timezone
         jst = timezone(timedelta(hours=9))
@@ -78,7 +79,7 @@ async def scrape(interaction: discord.Interaction, channel_name: str):
             if msg.author != client.user and 'http' in msg.content:
                 # Check if the link is a YouTube link
                 for word in msg.content.split():
-                    if word.startswith('http') and ('youtube.com' in word or 'youtu.be' in word):
+                    if word.startswith('http://', 'https://') and ('youtube.com' in word or 'youtu.be' in word):
                         links.append(word)
 
         # Compile the collected links into a YouTube playlist
