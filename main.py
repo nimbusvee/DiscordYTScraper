@@ -154,7 +154,7 @@ async def scrape(interaction: discord.Interaction, channel_name: str):
                 return {"video_id": vid, "playlist_id": pid}
 
 
-            playlist_title = f"{interaction.guild.name} {channel_name} {title_date}"
+            playlist_title = f"{channel_name} {title_date}"
             playlist_description = f"A playlist created from links shared in {interaction.guild.name}'s {channel_name} on {title_date}."
             print(f"Attempting to create playlist with title: '{playlist_title}'")
 
@@ -296,4 +296,4 @@ async def channel_name_autocomplete(interaction: discord.Interaction, current: s
     ]
     return matching_channels[:25]
 
-client.run('DISCORD_BOT_TOKEN') # Replace with your bot's token
+client.run('DISCORD_BOT_TOKEN')
