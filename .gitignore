@@ -5,3 +5,6 @@ token.json
 =======
 >>>>>>> vee
 run.py
+.env
+venv/
+test.py
