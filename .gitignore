@@ -2,3 +2,6 @@ client_secret.json
 token.json
 run_script.bat
 run.py
+.env
+venv/
+test.py
