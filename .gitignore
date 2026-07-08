@@ -1,0 +1,29 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+.env
+Bot.lnk
+client_secret.json
+cookies.txt
+Data_Visualisation.pbix
+HACHI HIVE Playlists.xlsx
+not_used_functions.py
+run_script.bat
+run_script.bat - Shortcut.lnk
+service_account.json
+song_artist_extract.py
+test.py
+token.json
+
+# Folders
+Playlists/
+Playlist_Database/
+
